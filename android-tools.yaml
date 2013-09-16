@@ -11,7 +11,7 @@ Description: |
 
   Based on Debian android-tools package
 Version: 4.2.2_git20130218
-Release: 1
+Release: 2
 Group: Tools
 License: Apache 2.0
 Sources:
@@ -29,5 +29,6 @@ Configure: none
 Files:
   - '%{_bindir}/adb'
   - '%{_bindir}/fastboot'
-Patches: []
+Patches:
+  - 0001-Ignore-selinux-android.h.patch
 SetupOptions: -q -n src

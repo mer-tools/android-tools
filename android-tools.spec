@@ -10,13 +10,14 @@ Name:       android-tools
 
 Summary:    Minimal set of android tools
 Version:    4.2.2_git20130218
-Release:    1
+Release:    2
 Group:      Tools
 License:    Apache 2.0
 Source0:    android-tools-4.2.2_git20130218.tar.gz
 Source1:    adb.mk
 Source2:    fastboot.mk
 Source100:  android-tools.yaml
+Patch0:     0001-Ignore-selinux-android.h.patch
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  libselinux-devel
 BuildRequires:  python
@@ -37,6 +38,8 @@ Based on Debian android-tools package
 %prep
 %setup -q -n src
 
+# 0001-Ignore-selinux-android.h.patch
+%patch0 -p1
 # >> setup
 cp %{SOURCE1} .
 cp %{SOURCE2} .
