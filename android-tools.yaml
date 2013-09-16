@@ -1,0 +1,33 @@
+Name: android-tools
+Summary: Minimal set of android tools
+Description: |
+  android-tools for Mer
+
+  The upstream tarball is based of these upstream Android git repos:
+    git clone https://android.googlesource.com/platform/system/core
+    git clone https://android.googlesource.com/platform/system/extras
+
+  with unneeded files removed.
+
+  Based on Debian android-tools package
+Version: 4.2.2_git20130218
+Release: 1
+Group: Tools
+License: Apache 2.0
+Sources:
+  - android-tools-4.2.2_git20130218.tar.gz
+  - adb.mk
+  - fastboot.mk
+PkgBR:
+  - libselinux-devel
+  - python
+  - zlib
+PkgConfigBR:
+  - openssl
+Builder: none
+Configure: none
+Files:
+  - '%{_bindir}/adb'
+  - '%{_bindir}/fastboot'
+Patches: []
+SetupOptions: -q -n src
