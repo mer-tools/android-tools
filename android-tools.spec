@@ -62,6 +62,7 @@ rm -rf %{buildroot}
 # >> install pre
 install -D -m 755  core/adb/adb %{buildroot}%{_bindir}/adb
 install -D -m 755  core/fastboot/fastboot %{buildroot}%{_bindir}/fastboot
+install -D -m 755  split_bootimg.pl %{buildroot}%{_bindir}/split_bootimg
 # << install pre
 
 # >> install post
@@ -71,5 +72,6 @@ install -D -m 755  core/fastboot/fastboot %{buildroot}%{_bindir}/fastboot
 %defattr(-,root,root,-)
 %{_bindir}/adb
 %{_bindir}/fastboot
+%{_bindir}/splitimg
 # >> files
 # << files

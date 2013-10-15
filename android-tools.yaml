@@ -29,6 +29,7 @@ Configure: none
 Files:
   - '%{_bindir}/adb'
   - '%{_bindir}/fastboot'
+  - '%{_bindir}/splitimg'
 Patches:
   - 0001-Ignore-selinux-android.h.patch
 SetupOptions: -q -n src
