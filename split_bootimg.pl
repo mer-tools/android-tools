@@ -12,8 +12,8 @@
 #                   describing initial instructions for splitting
 #                   the boot.img file.
 #
-#   Last Modified : Tue Dec  2 23:36:25 EST 2008
-#   By            : William Enck <enck@cse.psu.edu>
+#   Last Modified : Oct 4 2013
+#   By            : David Greaves <david.greaves@jolla.com>
 #
 #   Copyright (c) 2008 The Pennsylvania State University
 #   Systems and Internet Infrastructure Security Laboratory
@@ -63,6 +63,11 @@ my $SECOND_SIZE = undef;
 ## Main Code
 
 &parse_cmdline();
+(my $base = $IMAGE_FN) =~ s/.*\/(.*)$/$1/;
+my $k_file = $base . "-kernel";
+my $r_file = $base . "-ramdisk.gz";
+my $s_file = $base . "-second.gz";
+
 &parse_header($IMAGE_FN);
 
 =format (from bootimg.h)
@@ -89,10 +94,6 @@ my $k_offset = $PAGE_SIZE;
 my $r_offset = $k_offset + ($n * $PAGE_SIZE);
 my $s_offset = $r_offset + ($m * $PAGE_SIZE);
 
-(my $base = $IMAGE_FN) =~ s/.*\/(.*)$/$1/;
-my $k_file = $base . "-kernel";
-my $r_file = $base . "-ramdisk.gz";
-my $s_file = $base . "-second.gz";
 
 # The kernel is always there
 print "Writing $k_file ...";
@@ -164,8 +165,9 @@ sub parse_header {
     read(INF, $buf, UNSIGNED_SIZE * 2);
     my ($s_size, $s_addr) = unpack("VV", $buf);
 
-    # Ignore tags_addr
+    # Read tags_addr
     read(INF, $buf, UNSIGNED_SIZE);
+    my ($t_addr) = unpack("V", $buf);
 
     # get the page size (assume little-endian)
     read(INF, $buf, UNSIGNED_SIZE);
@@ -191,10 +193,26 @@ sub parse_header {
     # Print important values
     printf "Page size: %d (0x%08x)\n", $p_size, $p_size;
     printf "Kernel size: %d (0x%08x)\n", $k_size, $k_size;
+    printf "Kernel address: %d (0x%08x)\n", $k_addr, $k_addr;
     printf "Ramdisk size: %d (0x%08x)\n", $r_size, $r_size;
+    printf "Ramdisk address: %d (0x%08x)\n", $r_addr, $r_addr;
     printf "Second size: %d (0x%08x)\n", $s_size, $s_size;
     printf "Board name: $name\n";
     printf "Command line: $cmdline\n";
+
+    my $base_addr = $k_addr - 0x8000;
+    printf "Base is probably: 0x%08x  (assuming kernel_offset is 0x8000)\n", $base_addr;
+
+    # Note we use *_offset args and set --base to 0 to ensure total
+    # control To replicate the image we set second_offset even if
+    # there is no second_file
+    printf "\n\nTo recreate the image (with --base 0x00 and specifying exact offsets):\n";
+    printf "mkbootimg --cmdline '%s' --kernel %s --ramdisk %s --base 0x%08x --pagesize %d --kernel_offset 0x%08x --ramdisk_offset 0x%08x --second_offset 0x%08x", $cmdline, $k_file, $r_file, 0, $p_size, $k_addr, $r_addr, $s_addr;
+    if ($s_size != 0) {
+      printf "--second %s", $s_file ;
+    }
+    printf " --tags_offset 0x%08x --board '%s' -o %s.duplicate\n\n\n", $t_addr, $name, $base;
+
 
     # Save the values
     $PAGE_SIZE = $p_size;
