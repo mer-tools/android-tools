@@ -1,3 +1,6 @@
+* Tue Nov 19 2013 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-3
+- Fix packaging for split_bootimg
+
 * Mon Sep 16 2013 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-2
 - Ignoring unused android header in selinux
 

@@ -11,7 +11,7 @@ Description: |
 
   Based on Debian android-tools package
 Version: 4.2.2_git20130218
-Release: 2
+Release: 3
 Group: Tools
 License: Apache 2.0
 Sources:
@@ -32,4 +32,7 @@ Files:
   - '%{_bindir}/split_bootimg'
 Patches:
   - 0001-Ignore-selinux-android.h.patch
+  - 0002-Original-split_bootimg.pl-from-http-www.enck.org-too.patch
+  - 0003-Provide-command-line-to-use-mkbootimg-to-recreate-th.patch
+  - 0004-Add-mer-android-chroot-to-enter-the-ubu-chroot-from-.patch
 SetupOptions: -q -n src

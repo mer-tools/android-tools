@@ -10,7 +10,7 @@ Name:       android-tools
 
 Summary:    Minimal set of android tools
 Version:    4.2.2_git20130218
-Release:    2
+Release:    3
 Group:      Tools
 License:    Apache 2.0
 Source0:    android-tools-4.2.2_git20130218.tar.gz
@@ -18,6 +18,9 @@ Source1:    adb.mk
 Source2:    fastboot.mk
 Source100:  android-tools.yaml
 Patch0:     0001-Ignore-selinux-android.h.patch
+Patch1:     0002-Original-split_bootimg.pl-from-http-www.enck.org-too.patch
+Patch2:     0003-Provide-command-line-to-use-mkbootimg-to-recreate-th.patch
+Patch3:     0004-Add-mer-android-chroot-to-enter-the-ubu-chroot-from-.patch
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  libselinux-devel
 BuildRequires:  python
@@ -40,6 +43,12 @@ Based on Debian android-tools package
 
 # 0001-Ignore-selinux-android.h.patch
 %patch0 -p1
+# 0002-Original-split_bootimg.pl-from-http-www.enck.org-too.patch
+%patch1 -p1
+# 0003-Provide-command-line-to-use-mkbootimg-to-recreate-th.patch
+%patch2 -p1
+# 0004-Add-mer-android-chroot-to-enter-the-ubu-chroot-from-.patch
+%patch3 -p1
 # >> setup
 cp %{SOURCE1} .
 cp %{SOURCE2} .
