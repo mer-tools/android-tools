@@ -72,6 +72,6 @@ install -D -m 755  split_bootimg.pl %{buildroot}%{_bindir}/split_bootimg
 %defattr(-,root,root,-)
 %{_bindir}/adb
 %{_bindir}/fastboot
-%{_bindir}/splitimg
+%{_bindir}/split_bootimg
 # >> files
 # << files

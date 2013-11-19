@@ -29,7 +29,7 @@ Configure: none
 Files:
   - '%{_bindir}/adb'
   - '%{_bindir}/fastboot'
-  - '%{_bindir}/splitimg'
+  - '%{_bindir}/split_bootimg'
 Patches:
   - 0001-Ignore-selinux-android.h.patch
 SetupOptions: -q -n src
