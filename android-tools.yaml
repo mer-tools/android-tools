@@ -18,6 +18,7 @@ Sources:
   - android-tools-4.2.2_git20130218.tar.gz
   - adb.mk
   - fastboot.mk
+  - mkbootimg.mk
 PkgBR:
   - libselinux-devel
   - python
@@ -30,6 +31,7 @@ Files:
   - '%{_bindir}/adb'
   - '%{_bindir}/fastboot'
   - '%{_bindir}/split_bootimg'
+  - '%{_bindir}/mkbootimg'
 Patches:
   - 0001-Ignore-selinux-android.h.patch
   - 0002-Original-split_bootimg.pl-from-http-www.enck.org-too.patch
