@@ -1,3 +1,6 @@
+* Wed Nov 20 2013 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-4
+- Added libmincrypt for building mkbootimg <t.swindell@rubyx.co.uk>
+
 * Tue Nov 19 2013 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-3
 - Fix packaging for split_bootimg
 
