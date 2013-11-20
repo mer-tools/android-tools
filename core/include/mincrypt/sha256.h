@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 The Android Open Source Project
+ * Copyright 2011 The Android Open Source Project
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -23,8 +23,9 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
-#define SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
+
+#ifndef SYSTEM_CORE_INCLUDE_MINCRYPT_SHA256_H_
+#define SYSTEM_CORE_INCLUDE_MINCRYPT_SHA256_H_
 
 #include <stdint.h>
 #include "hash-internal.h"
@@ -33,20 +34,19 @@
 extern "C" {
 #endif // __cplusplus
 
-typedef HASH_CTX SHA_CTX;
+typedef HASH_CTX SHA256_CTX;
 
-void SHA_init(SHA_CTX* ctx);
-void SHA_update(SHA_CTX* ctx, const void* data, int len);
-const uint8_t* SHA_final(SHA_CTX* ctx);
+void SHA256_init(SHA256_CTX* ctx);
+void SHA256_update(SHA256_CTX* ctx, const void* data, int len);
+const uint8_t* SHA256_final(SHA256_CTX* ctx);
 
 // Convenience method. Returns digest address.
-// NOTE: *digest needs to hold SHA_DIGEST_SIZE bytes.
-const uint8_t* SHA_hash(const void* data, int len, uint8_t* digest);
+const uint8_t* SHA256_hash(const void* data, int len, uint8_t* digest);
 
-#define SHA_DIGEST_SIZE 20
+#define SHA256_DIGEST_SIZE 32
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
-#endif  // SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
+#endif  // SYSTEM_CORE_INCLUDE_MINCRYPT_SHA256_H_
