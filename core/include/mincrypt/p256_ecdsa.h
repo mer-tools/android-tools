@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 The Android Open Source Project
+ * Copyright 2013 The Android Open Source Project
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -23,30 +23,31 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
-#define SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
 
-#include <stdint.h>
-#include "hash-internal.h"
+#ifndef SYSTEM_CORE_INCLUDE_MINCRYPT_P256_ECDSA_H_
+#define SYSTEM_CORE_INCLUDE_MINCRYPT_P256_ECDSA_H_
+
+// Using current directory as relative include path here since
+// this code typically gets lifted into a variety of build systems
+// and directory structures.
+#include "p256.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif
 
-typedef HASH_CTX SHA_CTX;
-
-void SHA_init(SHA_CTX* ctx);
-void SHA_update(SHA_CTX* ctx, const void* data, int len);
-const uint8_t* SHA_final(SHA_CTX* ctx);
-
-// Convenience method. Returns digest address.
-// NOTE: *digest needs to hold SHA_DIGEST_SIZE bytes.
-const uint8_t* SHA_hash(const void* data, int len, uint8_t* digest);
-
-#define SHA_DIGEST_SIZE 20
+// Returns 0 if {r,s} is not a signature on message for
+// public key {key_x,key_y}.
+//
+// Note: message is a p256_int.
+// Convert from a binary string using p256_from_bin().
+int p256_ecdsa_verify(const p256_int* key_x,
+                      const p256_int* key_y,
+                      const p256_int* message,
+                      const p256_int* r, const p256_int* s);
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif
 
-#endif  // SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
+#endif  // SYSTEM_CORE_INCLUDE_MINCRYPT_P256_ECDSA_H_

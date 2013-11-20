@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 The Android Open Source Project
+ * Copyright 2007 The Android Open Source Project
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -23,30 +23,41 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
-#define SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
+
+#ifndef SYSTEM_CORE_INCLUDE_MINCRYPT_HASH_INTERNAL_H_
+#define SYSTEM_CORE_INCLUDE_MINCRYPT_HASH_INTERNAL_H_
 
 #include <stdint.h>
-#include "hash-internal.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif  // __cplusplus
 
-typedef HASH_CTX SHA_CTX;
+struct HASH_CTX;  // forward decl
 
-void SHA_init(SHA_CTX* ctx);
-void SHA_update(SHA_CTX* ctx, const void* data, int len);
-const uint8_t* SHA_final(SHA_CTX* ctx);
+typedef struct HASH_VTAB {
+  void (* const init)(struct HASH_CTX*);
+  void (* const update)(struct HASH_CTX*, const void*, int);
+  const uint8_t* (* const final)(struct HASH_CTX*);
+  const uint8_t* (* const hash)(const void*, int, uint8_t*);
+  int size;
+} HASH_VTAB;
 
-// Convenience method. Returns digest address.
-// NOTE: *digest needs to hold SHA_DIGEST_SIZE bytes.
-const uint8_t* SHA_hash(const void* data, int len, uint8_t* digest);
+typedef struct HASH_CTX {
+  const HASH_VTAB * f;
+  uint64_t count;
+  uint8_t buf[64];
+  uint32_t state[8];  // upto SHA2
+} HASH_CTX;
 
-#define SHA_DIGEST_SIZE 20
+#define HASH_init(ctx) (ctx)->f->init(ctx)
+#define HASH_update(ctx, data, len) (ctx)->f->update(ctx, data, len)
+#define HASH_final(ctx) (ctx)->f->final(ctx)
+#define HASH_hash(data, len, digest) (ctx)->f->hash(data, len, digest)
+#define HASH_size(ctx) (ctx)->f->size
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif  // __cplusplus
 
-#endif  // SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
+#endif  // SYSTEM_CORE_INCLUDE_MINCRYPT_HASH_INTERNAL_H_

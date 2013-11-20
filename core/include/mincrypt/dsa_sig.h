@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 The Android Open Source Project
+ * Copyright 2013 The Android Open Source Project
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -23,30 +23,21 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
-#define SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
 
-#include <stdint.h>
-#include "hash-internal.h"
+#ifndef SYSTEM_CORE_INCLUDE_MINCRYPT_DSA_SIG_H_
+#define SYSTEM_CORE_INCLUDE_MINCRYPT_DSA_SIG_H_
+
+#include "mincrypt/p256.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif
 
-typedef HASH_CTX SHA_CTX;
-
-void SHA_init(SHA_CTX* ctx);
-void SHA_update(SHA_CTX* ctx, const void* data, int len);
-const uint8_t* SHA_final(SHA_CTX* ctx);
-
-// Convenience method. Returns digest address.
-// NOTE: *digest needs to hold SHA_DIGEST_SIZE bytes.
-const uint8_t* SHA_hash(const void* data, int len, uint8_t* digest);
-
-#define SHA_DIGEST_SIZE 20
+// Returns 0 if input sig is not a valid ASN.1 sequence
+int dsa_sig_unpack(unsigned char* sig, int sig_len, p256_int* r_int, p256_int* s_int);
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif
 
-#endif  // SYSTEM_CORE_INCLUDE_MINCRYPT_SHA1_H_
+#endif /* SYSTEM_CORE_INCLUDE_MINCRYPT_DSA_SIG_H_ */

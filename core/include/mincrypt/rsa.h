@@ -25,8 +25,8 @@
 ** ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _EMBEDDED_RSA_H_
-#define _EMBEDDED_RSA_H_
+#ifndef SYSTEM_CORE_INCLUDE_MINCRYPT_RSA_H_
+#define SYSTEM_CORE_INCLUDE_MINCRYPT_RSA_H_
 
 #include <inttypes.h>
 
@@ -48,10 +48,11 @@ typedef struct RSAPublicKey {
 int RSA_verify(const RSAPublicKey *key,
                const uint8_t* signature,
                const int len,
-               const uint8_t* sha);
+               const uint8_t* hash,
+               const int hash_len);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif // SYSTEM_CORE_INCLUDE_MINCRYPT_RSA_H_
