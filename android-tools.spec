@@ -10,7 +10,7 @@ Name:       android-tools
 
 Summary:    Minimal set of android tools
 Version:    4.2.2_git20130218
-Release:    4
+Release:    5
 Group:      Tools
 License:    Apache 2.0
 Source0:    android-tools-4.2.2_git20130218.tar.gz
@@ -88,5 +88,6 @@ install -D -m 755  mer-android-chroot %{buildroot}%{_bindir}/ubu-chroot
 %{_bindir}/fastboot
 %{_bindir}/split_bootimg
 %{_bindir}/mkbootimg
+%{_bindir}/ubu-chroot
 # >> files
 # << files
