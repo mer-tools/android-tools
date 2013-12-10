@@ -32,6 +32,7 @@ Files:
   - '%{_bindir}/fastboot'
   - '%{_bindir}/split_bootimg'
   - '%{_bindir}/mkbootimg'
+  - '%{_bindir}/ubu-chroot'
 Patches:
   - 0001-Ignore-selinux-android.h.patch
   - 0002-Original-split_bootimg.pl-from-http-www.enck.org-too.patch

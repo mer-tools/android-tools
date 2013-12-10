@@ -76,6 +76,7 @@ install -D -m 755  core/adb/adb %{buildroot}%{_bindir}/adb
 install -D -m 755  core/fastboot/fastboot %{buildroot}%{_bindir}/fastboot
 install -D -m 755  core/mkbootimg/mkbootimg %{buildroot}%{_bindir}/mkbootimg
 install -D -m 755  split_bootimg.pl %{buildroot}%{_bindir}/split_bootimg
+install -D -m 755  mer-android-chroot %{buildroot}%{_bindir}/ubu-chroot
 # << install pre
 
 # >> install post
