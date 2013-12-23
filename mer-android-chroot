@@ -104,7 +104,8 @@ done
 shift $(($OPTIND - 1))
 
 if [[ -z "${uburoot}" ]] ; then
-    uburoot=$(dirname $(readlink -f $0))
+    echo "You must specify the Ubuntu rootfs using the -r option"
+    exit 1
 else
     uburoot=$(readlink -f $uburoot)
 fi
@@ -186,8 +187,11 @@ prepare_user() {
     if [[ $bind_mount_home == "yes" ]] ; then
 	echo "Mounting home directory: ${HOMEDIR}"
 	mkdir -p ${uburoot}${HOMEDIR}
-	echo "mount --bind ${HOMEDIR} ${uburoot}${HOMEDIR}"
-	mount --bind ${HOMEDIR} ${uburoot}${HOMEDIR}
+	# For some reason, inside an SDK, we can't remount a bound $HOME
+	local proot=""
+	{ [[ -h /parentroot ]] || ! [[ -e /parentroot ]]; } || proot=/parentroot
+	echo "mount --bind ${proot}${HOMEDIR} ${uburoot}${HOMEDIR}"
+	mount --bind ${proot}${HOMEDIR} ${uburoot}${HOMEDIR}
     fi
     echo "$user ALL=NOPASSWD: ALL" > ${uburoot}/etc/sudoers.d/$user
     chmod 0440 ${uburoot}/etc/sudoers.d/$user
