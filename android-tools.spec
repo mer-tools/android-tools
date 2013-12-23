@@ -10,7 +10,7 @@ Name:       android-tools
 
 Summary:    Minimal set of android tools
 Version:    4.2.2_git20130218
-Release:    5
+Release:    6
 Group:      Tools
 License:    Apache 2.0
 Source0:    android-tools-4.2.2_git20130218.tar.gz
@@ -23,6 +23,7 @@ Patch1:     0002-Original-split_bootimg.pl-from-http-www.enck.org-too.patch
 Patch2:     0003-Provide-command-line-to-use-mkbootimg-to-recreate-th.patch
 Patch3:     0004-Add-mer-android-chroot-to-enter-the-ubu-chroot-from-.patch
 Patch4:     0005-Added-libmincrypt-for-building-mkbootimg.patch
+Patch5:     0006-Require-r-option-Fix-broken-mount-for-HOME-in-some-i.patch
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  libselinux-devel
 BuildRequires:  python
@@ -53,6 +54,8 @@ Based on Debian android-tools package
 %patch3 -p1
 # 0005-Added-libmincrypt-for-building-mkbootimg.patch
 %patch4 -p1
+# 0006-Require-r-option-Fix-broken-mount-for-HOME-in-some-i.patch
+%patch5 -p1
 # >> setup
 # << setup
 
