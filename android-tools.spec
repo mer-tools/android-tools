@@ -80,6 +80,7 @@ install -D -m 755  core/fastboot/fastboot %{buildroot}%{_bindir}/fastboot
 install -D -m 755  core/mkbootimg/mkbootimg %{buildroot}%{_bindir}/mkbootimg
 install -D -m 755  split_bootimg.pl %{buildroot}%{_bindir}/split_bootimg
 install -D -m 755  mer-android-chroot %{buildroot}%{_bindir}/ubu-chroot
+install -D -m 755  mer-ubusdk-bash-setup %{buildroot}%{_datadir}/ubu-chroot/mer-ubusdk-bash-setup
 # << install pre
 
 # >> install post
@@ -92,5 +93,6 @@ install -D -m 755  mer-android-chroot %{buildroot}%{_bindir}/ubu-chroot
 %{_bindir}/split_bootimg
 %{_bindir}/mkbootimg
 %{_bindir}/ubu-chroot
+%{_datadir}/ubu-chroot/*
 # >> files
 # << files
