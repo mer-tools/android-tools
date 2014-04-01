@@ -274,7 +274,7 @@ do_it_all() {
 	0 )
 	    echo "Entering chroot as $user"
 #	    setarch x86_64 chroot ${uburoot} /bin/su -s /bin/bash -l $user -- -c "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /mer-bash-setup -i"
-	    setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /mer-bash-setup -i"
+	    setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup -i"
 	    ;;
 	* )
 	    if [[ $1 == 'exec' ]]; then

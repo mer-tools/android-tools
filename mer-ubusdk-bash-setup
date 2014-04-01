@@ -1,0 +1,14 @@
+# This emulates normal bash login behaviour
+export MERSDK=1
+[[ -e /etc/profile ]] && . /etc/profile
+
+if [[ -e ~/.bash_profile ]] ; then
+   . ~/.bash_profile
+elif [[ -e ~/.bash_login ]] ; then
+   . ~/.bash_login
+elif [[ -e ~/.profile ]] ; then
+   . ~/.profile
+fi
+
+[[ -e ~/.mersdkubu.profile ]] && . ~/.mersdkubu.profile
+
