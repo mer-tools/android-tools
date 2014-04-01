@@ -1,3 +1,6 @@
+* Tue Apr 01 2014 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-7
+- Add support for  ~/.mersdkubu.profile
+
 * Mon Dec 23 2013 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-6
 - Require -r option; Fix broken mount for $HOME in some instances
 

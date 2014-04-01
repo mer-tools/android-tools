@@ -11,7 +11,7 @@ Description: |
 
   Based on Debian android-tools package
 Version: 4.2.2_git20130218
-Release: 6
+Release: 7
 Group: Tools
 License: Apache 2.0
 Sources:
@@ -41,4 +41,5 @@ Patches:
   - 0004-Add-mer-android-chroot-to-enter-the-ubu-chroot-from-.patch
   - 0005-Added-libmincrypt-for-building-mkbootimg.patch
   - 0006-Require-r-option-Fix-broken-mount-for-HOME-in-some-i.patch
+  - 0007-Add-support-for-.mersdkubu.profile.patch
 SetupOptions: -q -n src
