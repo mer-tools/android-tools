@@ -227,34 +227,6 @@ run_user_hook() {
 	$hook
     }
 }
-################
-
-add_pid_to_active_chroot_list() {
-    mkdir -p $uburoot/.active_chroots/
-    touch $uburoot/.active_chroots/$$
-}
-rm_pid_from_active_chroot_list() {
-    rm $uburoot/.active_chroots/$$
-}
-ensure_active_chroot_list_is_empty() {
-    mkdir -p $uburoot/.active_chroots/
-    pids=$(ls $uburoot/.active_chroots/)
-    stillused=""
-    [[ -z "$pids" ]] || {
-	for pid in $pids; do
-	    if [[ -d /proc/$pid ]] && [[ `ls -l /proc/${pid}/fd | grep -w "${uburoot}"` ]] ; then
-		stillused="$stillused $pid"
-	    else
-		rm $uburoot/.active_chroots/$pid
-	    fi
-	done
-	[[ -z "$stillused" ]] || {
-	    echo "There appears to be $(wc -w <<< $stillused) chroot(s) still using this SDK"
-	    echo "Process(es) $stillused    are still in use, exiting without unmounting..."
-	    exit 1;
-	}
-    }
-}
 
 ################################################################
 
@@ -268,13 +240,20 @@ do_it_all() {
     prepare_etc           # resolv.conf and ssl certs
     run_user_hook mount_sdk
     run_user_hook enter_sdk
-    add_pid_to_active_chroot_list
 
     case "$#" in
 	0 )
 	    echo "Entering chroot as $user"
-#	    setarch x86_64 chroot ${uburoot} /bin/su -s /bin/bash -l $user -- -c "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /mer-bash-setup -i"
-	    setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup -i"
+	    if grep squeeze ${uburoot}/etc/debian_version > /dev/null; then
+		# For older 10.04
+		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup -i";
+	    elif grep wheezy ${uburoot}/etc/debian_version > /dev/null; then
+		# This is for ubuntu 12.04 (arg quoting for sudo is different)
+		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user exec bash -i -c "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup"
+	    else
+		echo Unknown ubuntu version
+		exit 1
+	    fi
 	    ;;
 	* )
 	    if [[ $1 == 'exec' ]]; then
@@ -297,7 +276,6 @@ EOF
 	    ;;
     esac
     echo exited
-    rm_pid_from_active_chroot_list
     run_user_hook leave_sdk
     exit $retval
 }
