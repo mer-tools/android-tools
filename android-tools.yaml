@@ -11,7 +11,7 @@ Description: |
 
   Based on Debian android-tools package
 Version: 4.2.2_git20130218
-Release: 7
+Release: 8
 Group: Tools
 License: Apache 2.0
 Sources:
@@ -42,4 +42,5 @@ Patches:
   - 0005-Added-libmincrypt-for-building-mkbootimg.patch
   - 0006-Require-r-option-Fix-broken-mount-for-HOME-in-some-i.patch
   - 0007-Add-support-for-.mersdkubu.profile.patch
+  - 0008-Support-multiple-chroot-entry-invocation-to-support-.patch
 SetupOptions: -q -n src

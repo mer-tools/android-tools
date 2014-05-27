@@ -10,7 +10,7 @@ Name:       android-tools
 
 Summary:    Minimal set of android tools
 Version:    4.2.2_git20130218
-Release:    7
+Release:    8
 Group:      Tools
 License:    Apache 2.0
 Source0:    android-tools-4.2.2_git20130218.tar.gz
@@ -25,6 +25,7 @@ Patch3:     0004-Add-mer-android-chroot-to-enter-the-ubu-chroot-from-.patch
 Patch4:     0005-Added-libmincrypt-for-building-mkbootimg.patch
 Patch5:     0006-Require-r-option-Fix-broken-mount-for-HOME-in-some-i.patch
 Patch6:     0007-Add-support-for-.mersdkubu.profile.patch
+Patch7:     0008-Support-multiple-chroot-entry-invocation-to-support-.patch
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  libselinux-devel
 BuildRequires:  python
@@ -59,6 +60,8 @@ Based on Debian android-tools package
 %patch5 -p1
 # 0007-Add-support-for-.mersdkubu.profile.patch
 %patch6 -p1
+# 0008-Support-multiple-chroot-entry-invocation-to-support-.patch
+%patch7 -p1
 # >> setup
 # << setup
 

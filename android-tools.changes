@@ -1,3 +1,6 @@
+* Tue May 27 2014 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-8
+- Update mer-android-chroot
+
 * Tue Apr 01 2014 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-7
 - Add support for  ~/.mersdkubu.profile
 
