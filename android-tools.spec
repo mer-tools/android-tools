@@ -10,7 +10,7 @@ Name:       android-tools
 
 Summary:    Minimal set of android tools
 Version:    4.2.2_git20130218
-Release:    8
+Release:    9
 Group:      Tools
 License:    Apache 2.0
 Source0:    android-tools-4.2.2_git20130218.tar.gz

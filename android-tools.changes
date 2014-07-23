@@ -1,3 +1,6 @@
+* Wed Jul 23 2014 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-9
+- Support newer ubuntu in ubu-root
+
 * Tue May 27 2014 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-8
 - Update mer-android-chroot
 
