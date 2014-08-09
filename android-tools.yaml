@@ -11,7 +11,7 @@ Description: |
 
   Based on Debian android-tools package
 Version: 4.2.2_git20130218
-Release: 9
+Release: 10
 Group: Tools
 License: Apache 2.0
 Sources:
@@ -43,4 +43,5 @@ Patches:
   - 0006-Require-r-option-Fix-broken-mount-for-HOME-in-some-i.patch
   - 0007-Add-support-for-.mersdkubu.profile.patch
   - 0008-Support-multiple-chroot-entry-invocation-to-support-.patch
+  - 0009-Added-latest-ubuntu-14.04-support-to-debian-version-.patch
 SetupOptions: -q -n src

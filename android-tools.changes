@@ -1,3 +1,6 @@
+* Sat Aug 09 2014 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-10
+- Rebased ubuntu 14.04 support to work with git pkg
+
 * Wed Jul 23 2014 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-9
 - Support newer ubuntu in ubu-root
 
