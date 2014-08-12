@@ -4,7 +4,7 @@
 usage()
 {
     cat <<EOF
-    usage: $0 [-u <user>] [-m <all|none|root|home>] [-r <SDK root path>] [<command> <args> ..]
+    usage: $0 [-v] [-u <user>] [-m <all|none|root|home>] [-r <SDK root path>] [<command> <args> ..]
            $0 -h
 
        This is the Mer android building chroot SDK.
@@ -25,8 +25,9 @@ usage()
        -u  System user to link into SDK (not needed if using sudo)
        -m  Devices to bind mount from host: none, all (default)
            root, home
-       -r The root of the SDK to use - normally derived from the
-          pathname of $0
+       -r  The root of the SDK to use - normally derived from the
+           pathname of $0
+       -v  Be verbose about what's happening
        -h  Show this help
 
       Profile
@@ -56,6 +57,12 @@ EOF
     return 0
 }
 
+## verbose if not doing an exec
+inform() {
+    [[ $QUIET ]] && return
+    echo "$@"
+}
+
 if [[ $EUID -ne 0 ]]; then
     exec sudo $0 "$@"
     echo "$0 must be run as root and sudo failed; exiting"
@@ -74,7 +81,9 @@ user=$SUDO_USER || true;
 bind_mount_root="yes";
 bind_mount_home="yes";
 
-while getopts "u:m:r:" opt; do
+QUIET=yes
+
+while getopts "u:m:r:v" opt; do
     case $opt in
 	u ) user=$OPTARG;;
 	m )
@@ -94,6 +103,7 @@ while getopts "u:m:r:" opt; do
 	r ) uburoot=$OPTARG;;
 	h|\? ) usage
             exit 1;;
+	v ) QUIET= ;;
 	: ) echo "Option -$OPTARG requires an argument." >&2
 	    usage
 	    exit 1;;
@@ -109,7 +119,7 @@ if [[ -z "${uburoot}" ]] ; then
 else
     uburoot=$(readlink -f $uburoot)
 fi
-echo set root to $uburoot
+inform set root to $uburoot
 
 if [[ ! -f ${uburoot}/etc/debian_version ]] ; then
     echo "${uburoot} does not look like an Ubuntu rootfs"
@@ -152,7 +162,7 @@ prepare_mountpoints() {
     # Make parent mountpoint not shared with parent namespace
     mount --make-slave "$sdkparent/"
 
-    echo "Mounting system directories..."
+    inform "Mounting system directories..."
     mount_bind /proc
     mount_bind /proc/sys/fs/binfmt_misc
     mount_bind /sys
@@ -163,7 +173,7 @@ prepare_mountpoints() {
     mount_bind /var/run/dbus
 
     if [[ $bind_mount_root == "yes" ]] ; then
-	echo "Mounting / as /parentroot"
+	inform "Mounting / as /parentroot"
 	mkdir -p ${uburoot}/parentroot
 	mount --rbind / ${uburoot}/parentroot/
     fi
@@ -171,6 +181,13 @@ prepare_mountpoints() {
     mkdir -p ${uburoot}/lib/modules/`uname -r`
     mount_bind /lib/modules/`uname -r`
 
+}
+umount_spare() {
+    # for some reason these seem to escape the unshare -m
+    umount ${uburoot}/proc/sys/fs/binfmt_misc || :
+    umount ${uburoot}/dev/pts || :
+    umount ${uburoot}/dev/shm || :
+    umount ${uburoot}/var/run/dbus || :
 }
 
 prepare_user() {
@@ -187,12 +204,12 @@ prepare_user() {
     HOMEDIR=$(getent passwd $user | cut -f6 -d:)
 
     if [[ $bind_mount_home == "yes" ]] ; then
-	echo "Mounting home directory: ${HOMEDIR}"
+	inform "Mounting home directory: ${HOMEDIR}"
 	mkdir -p ${uburoot}${HOMEDIR}
 	# For some reason, inside an SDK, we can't remount a bound $HOME
 	local proot=""
 	{ [[ -h /parentroot ]] || ! [[ -e /parentroot ]]; } || proot=/parentroot
-	echo "mount --bind ${proot}${HOMEDIR} ${uburoot}${HOMEDIR}"
+	inform "mount --bind ${proot}${HOMEDIR} ${uburoot}${HOMEDIR}"
 	mount --bind ${proot}${HOMEDIR} ${uburoot}${HOMEDIR}
     fi
     echo "$user ALL=NOPASSWD: ALL" > ${uburoot}/etc/sudoers.d/$user
@@ -225,7 +242,7 @@ setup_user_hooks(){
 run_user_hook() {
     hook=$1
     [[ $(type -t $hook) == "function" ]] && {
-	echo "User hook $hook"
+	inform "User hook $hook"
 	$hook
     }
 }
@@ -245,7 +262,7 @@ do_it_all() {
 
     case "$#" in
 	0 )
-	    echo "Entering chroot as $user"
+	    inform "Entering chroot as $user"
 	    if grep squeeze ${uburoot}/etc/debian_version > /dev/null; then
 		# For older 10.04
 		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup -i";
@@ -272,15 +289,16 @@ EOF
 		usage
 		retval=1
 	    else
-		setarch x86_64 chroot "${uburoot}" /bin/su -s /bin/bash -l $user -- -c "export MERSDKUBU=1;if [ -d $cwd ]; then cd $cwd; fi; $*"
+		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user exec bash -i -c "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup -c '$*'"
 		retval=$?
 	    fi
 	    ;;
     esac
-    echo exited
+    inform exited
     run_user_hook leave_sdk
+    umount_spare
     exit $retval
 }
 
 # This allows us to update this script in place even whilst running.
-do_it_all
+do_it_all "$@"
