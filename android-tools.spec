@@ -10,7 +10,7 @@ Name:       android-tools
 
 Summary:    Minimal set of android tools
 Version:    4.2.2_git20130218
-Release:    10
+Release:    11
 Group:      Tools
 License:    Apache 2.0
 Source0:    android-tools-4.2.2_git20130218.tar.gz
@@ -27,6 +27,7 @@ Patch5:     0006-Require-r-option-Fix-broken-mount-for-HOME-in-some-i.patch
 Patch6:     0007-Add-support-for-.mersdkubu.profile.patch
 Patch7:     0008-Support-multiple-chroot-entry-invocation-to-support-.patch
 Patch8:     0009-Added-latest-ubuntu-14.04-support-to-debian-version-.patch
+Patch9:     0010-ubu-chroot-Fix-broken-exec-handling-and-be-quiet-by-.patch
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  libselinux-devel
 BuildRequires:  python
@@ -43,6 +44,15 @@ with unneeded files removed.
 
 Based on Debian android-tools package
 
+
+%package -n sudo-for-abuild
+Summary:    Install this to allow OBS abuild user to use sudo in build
+Group:      Development
+Requires:   %{name} = %{version}-%{release}
+Requires:   sudo
+
+%description -n sudo-for-abuild
+Allow abuild user to execute sudo in an OBS build root.
 
 %prep
 %setup -q -n src
@@ -65,6 +75,8 @@ Based on Debian android-tools package
 %patch7 -p1
 # 0009-Added-latest-ubuntu-14.04-support-to-debian-version-.patch
 %patch8 -p1
+# 0010-ubu-chroot-Fix-broken-exec-handling-and-be-quiet-by-.patch
+%patch9 -p1
 # >> setup
 # << setup
 
@@ -90,6 +102,9 @@ install -D -m 755  core/mkbootimg/mkbootimg %{buildroot}%{_bindir}/mkbootimg
 install -D -m 755  split_bootimg.pl %{buildroot}%{_bindir}/split_bootimg
 install -D -m 755  mer-android-chroot %{buildroot}%{_bindir}/ubu-chroot
 install -D -m 755  mer-ubusdk-bash-setup %{buildroot}%{_datadir}/ubu-chroot/mer-ubusdk-bash-setup
+# For sudo-for-abuild
+install -D -m 755  sudoers.abuild %{buildroot}%{_sysconfdir}/sudoers.d/abuild
+
 # << install pre
 
 # >> install post
@@ -105,3 +120,9 @@ install -D -m 755  mer-ubusdk-bash-setup %{buildroot}%{_datadir}/ubu-chroot/mer-
 %{_datadir}/ubu-chroot/*
 # >> files
 # << files
+
+%files -n sudo-for-abuild
+%defattr(-,root,root,-)
+%{_sysconfdir}/sudoers.d/abuild
+# >> files sudo-for-abuild
+# << files sudo-for-abuild

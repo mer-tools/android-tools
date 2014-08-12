@@ -11,7 +11,7 @@ Description: |
 
   Based on Debian android-tools package
 Version: 4.2.2_git20130218
-Release: 10
+Release: 11
 Group: Tools
 License: Apache 2.0
 Sources:
@@ -44,4 +44,15 @@ Patches:
   - 0007-Add-support-for-.mersdkubu.profile.patch
   - 0008-Support-multiple-chroot-entry-invocation-to-support-.patch
   - 0009-Added-latest-ubuntu-14.04-support-to-debian-version-.patch
+  - 0010-ubu-chroot-Fix-broken-exec-handling-and-be-quiet-by-.patch
 SetupOptions: -q -n src
+SubPackages:
+  - Name: sudo-for-abuild
+    AsWholeName: true
+    Summary: Install this to allow OBS abuild user to use sudo in build
+    Description: Allow abuild user to execute sudo in an OBS build root.
+    Group: Development
+    Requires:
+      - sudo
+    Files:
+      - '%{_sysconfdir}/sudoers.d/abuild'
