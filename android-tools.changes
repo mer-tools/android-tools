@@ -1,3 +1,6 @@
+* Sun Mar 29 2015 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-12
+- Mount /home using --rbind to include any submounts
+
 * Tue Aug 12 2014 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-11
 - [ubu-chroot] Fix broken 'exec' handling and be quiet by default.
 

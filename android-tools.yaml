@@ -11,7 +11,7 @@ Description: |
 
   Based on Debian android-tools package
 Version: 4.2.2_git20130218
-Release: 11
+Release: 12
 Group: Tools
 License: Apache 2.0
 Sources:
@@ -45,6 +45,7 @@ Patches:
   - 0008-Support-multiple-chroot-entry-invocation-to-support-.patch
   - 0009-Added-latest-ubuntu-14.04-support-to-debian-version-.patch
   - 0010-ubu-chroot-Fix-broken-exec-handling-and-be-quiet-by-.patch
+  - 0011-Mount-home-using-rbind-to-include-any-submounts.patch
 SetupOptions: -q -n src
 SubPackages:
   - Name: sudo-for-abuild

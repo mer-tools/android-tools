@@ -10,7 +10,7 @@ Name:       android-tools
 
 Summary:    Minimal set of android tools
 Version:    4.2.2_git20130218
-Release:    11
+Release:    12
 Group:      Tools
 License:    Apache 2.0
 Source0:    android-tools-4.2.2_git20130218.tar.gz
@@ -28,6 +28,7 @@ Patch6:     0007-Add-support-for-.mersdkubu.profile.patch
 Patch7:     0008-Support-multiple-chroot-entry-invocation-to-support-.patch
 Patch8:     0009-Added-latest-ubuntu-14.04-support-to-debian-version-.patch
 Patch9:     0010-ubu-chroot-Fix-broken-exec-handling-and-be-quiet-by-.patch
+Patch10:     0011-Mount-home-using-rbind-to-include-any-submounts.patch
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  libselinux-devel
 BuildRequires:  python
@@ -77,6 +78,8 @@ Allow abuild user to execute sudo in an OBS build root.
 %patch8 -p1
 # 0010-ubu-chroot-Fix-broken-exec-handling-and-be-quiet-by-.patch
 %patch9 -p1
+# 0011-Mount-home-using-rbind-to-include-any-submounts.patch
+%patch10 -p1
 # >> setup
 # << setup
 
