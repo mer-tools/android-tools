@@ -207,8 +207,8 @@ prepare_user() {
 	# For some reason, inside an SDK, we can't remount a bound $HOME
 	local proot=""
 	{ [[ -h /parentroot ]] || ! [[ -e /parentroot ]]; } || proot=/parentroot
-	inform "mount --bind ${proot}${HOMEDIR} ${uburoot}${HOMEDIR}"
-	mount --bind ${proot}${HOMEDIR} ${uburoot}${HOMEDIR}
+	inform "mount --rbind ${proot}${HOMEDIR} ${uburoot}${HOMEDIR}"
+	mount --rbind ${proot}${HOMEDIR} ${uburoot}${HOMEDIR}
     fi
     echo "$user ALL=NOPASSWD: ALL" > ${uburoot}/etc/sudoers.d/$user
     chmod 0440 ${uburoot}/etc/sudoers.d/$user
