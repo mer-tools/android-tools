@@ -214,6 +214,8 @@ int match_fastboot_with_serial(usb_ifc_info *info, const char *local_serial)
        (info->dev_vendor != 0x413c) &&  // DELL
        (info->dev_vendor != 0x2314) &&  // INQ Mobile
        (info->dev_vendor != 0x0b05) &&  // Asus
+       (info->dev_vendor != 0x1d45) &&  // Qisda
+       (info->dev_vendor != 0x2931) &&  // Jolla
        (info->dev_vendor != 0x0bb4))    // HTC
             return -1;
     if(info->ifc_class != 0xff) return -1;

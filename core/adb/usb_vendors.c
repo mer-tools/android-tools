@@ -100,6 +100,8 @@
 #define VENDOR_ID_INTERMEC      0x067e
 // IRiver's USB Vendor ID
 #define VENDOR_ID_IRIVER        0x2420
+// Jolla's USB Vendor ID
+#define VENDOR_ID_JOLLA         0x2931
 // K-Touch's USB Vendor ID
 #define VENDOR_ID_K_TOUCH       0x24E3
 // KT Tech's USB Vendor ID
@@ -229,6 +231,7 @@ int builtInVendorIds[] = {
     VENDOR_ID_INTEL,
     VENDOR_ID_INTERMEC,
     VENDOR_ID_IRIVER,
+    VENDOR_ID_JOLLA,
     VENDOR_ID_KOBO,
     VENDOR_ID_K_TOUCH,
     VENDOR_ID_KT_TECH,
