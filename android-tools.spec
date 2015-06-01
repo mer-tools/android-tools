@@ -10,7 +10,7 @@ Name:       android-tools
 
 Summary:    Minimal set of android tools
 Version:    4.2.2_git20130218
-Release:    12
+Release:    13
 Group:      Tools
 License:    Apache 2.0
 Source0:    android-tools-4.2.2_git20130218.tar.gz
@@ -29,6 +29,11 @@ Patch7:     0008-Support-multiple-chroot-entry-invocation-to-support-.patch
 Patch8:     0009-Added-latest-ubuntu-14.04-support-to-debian-version-.patch
 Patch9:     0010-ubu-chroot-Fix-broken-exec-handling-and-be-quiet-by-.patch
 Patch10:     0011-Mount-home-using-rbind-to-include-any-submounts.patch
+Patch11:     0012-Update-to-newer-core-8032f3b.patch
+Patch12:     0013-Update-to-new-extras-ba2a236.patch
+Patch13:     0014-PATCH-Add-usb-vendor-info.patch
+Patch14:     0015-PATCH-Use-mmap-for-fastboot-data.patch
+Patch15:     0016-PATCH-Ignore-selinux-android-header.patch
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  libselinux-devel
 BuildRequires:  python
@@ -80,6 +85,16 @@ Allow abuild user to execute sudo in an OBS build root.
 %patch9 -p1
 # 0011-Mount-home-using-rbind-to-include-any-submounts.patch
 %patch10 -p1
+# 0012-Update-to-newer-core-8032f3b.patch
+%patch11 -p1
+# 0013-Update-to-new-extras-ba2a236.patch
+%patch12 -p1
+# 0014-PATCH-Add-usb-vendor-info.patch
+%patch13 -p1
+# 0015-PATCH-Use-mmap-for-fastboot-data.patch
+%patch14 -p1
+# 0016-PATCH-Ignore-selinux-android-header.patch
+%patch15 -p1
 # >> setup
 # << setup
 

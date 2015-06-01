@@ -1,3 +1,8 @@
+* Mon Jun 01 2015 David Greaves <david.greaves@jollamobile.com> - 4.2.2_git20130218-13
+- [PATCH] Ignore selinux android header
+- [PATCH] Use mmap for fastboot data
+- [PATCH] Add usb vendor info
+
 * Sun Mar 29 2015 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-12
 - Mount /home using --rbind to include any submounts
 
