@@ -36,6 +36,7 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
+#include <stdint.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #define lseek64 lseek
@@ -44,14 +45,7 @@ extern "C" {
 #define off64_t off_t
 #endif
 
-#ifdef __BIONIC__
-extern void*  __mmap2(void *, size_t, int, int, int, off_t);
-static inline void *mmap64(void *addr, size_t length, int prot, int flags,
-        int fd, off64_t offset)
-{
-    return __mmap2(addr, length, prot, flags, fd, offset >> 12);
-}
-#endif
+#include "ext4_sb.h"
 
 extern int force;
 
@@ -61,7 +55,6 @@ extern int force;
 #define critical_error(fmt, args...) do { fprintf(stderr, "critical error: %s: " fmt "\n", __func__, ## args); longjmp(setjmp_env, EXIT_FAILURE); } while (0)
 #define critical_error_errno(s, args...) critical_error(s ": %s", ##args, strerror(errno))
 
-#define EXT4_SUPER_MAGIC 0xEF53
 #define EXT4_JNL_BACKUP_BLOCKS 1
 
 #ifndef min /* already defined by windows.h */
@@ -69,60 +62,39 @@ extern int force;
 #endif
 
 #define DIV_ROUND_UP(x, y) (((x) + (y) - 1)/(y))
-#define ALIGN(x, y) ((y) * DIV_ROUND_UP((x), (y)))
+#define EXT4_ALIGN(x, y) ((y) * DIV_ROUND_UP((x), (y)))
 
-#define __le64 u64
-#define __le32 u32
-#define __le16 u16
+/* XXX */
+#define cpu_to_le32(x) (x)
+#define cpu_to_le16(x) (x)
+#define le32_to_cpu(x) (x)
+#define le16_to_cpu(x) (x)
 
-#define __be64 u64
-#define __be32 u32
-#define __be16 u16
-
-#define __u64 u64
-#define __u32 u32
-#define __u16 u16
-#define __u8 u8
-
+#ifdef __LP64__
+typedef unsigned long u64;
+typedef signed long s64;
+#else
 typedef unsigned long long u64;
 typedef signed long long s64;
+#endif
 typedef unsigned int u32;
 typedef unsigned short int u16;
 typedef unsigned char u8;
 
 struct block_group_info;
+struct xattr_list_element;
 
 struct ext2_group_desc {
-	__le32 bg_block_bitmap;
-	__le32 bg_inode_bitmap;
-	__le32 bg_inode_table;
-	__le16 bg_free_blocks_count;
-	__le16 bg_free_inodes_count;
-	__le16 bg_used_dirs_count;
-	__le16 bg_flags;
-	__le32 bg_reserved[2];
-	__le16 bg_reserved16;
-	__le16 bg_checksum;
-};
-
-struct fs_info {
-	s64 len;	/* If set to 0, ask the block device for the size,
-			 * if less than 0, reserve that much space at the
-			 * end of the partition, else use the size given. */
-	u32 block_size;
-	u32 blocks_per_group;
-	u32 inodes_per_group;
-	u32 inode_size;
-	u32 inodes;
-	u32 journal_blocks;
-	u16 feat_ro_compat;
-	u16 feat_compat;
-	u16 feat_incompat;
-	u32 bg_desc_reserve_blocks;
-	const char *label;
-	u8 no_journal;
-
-	struct sparse_file *sparse_file;
+	u32 bg_block_bitmap;
+	u32 bg_inode_bitmap;
+	u32 bg_inode_table;
+	u16 bg_free_blocks_count;
+	u16 bg_free_inodes_count;
+	u16 bg_used_dirs_count;
+	u16 bg_flags;
+	u32 bg_reserved[2];
+	u16 bg_reserved16;
+	u16 bg_checksum;
 };
 
 struct fs_aux_info {
@@ -130,6 +102,7 @@ struct fs_aux_info {
 	struct ext4_super_block **backup_sb;
 	struct ext2_group_desc *bg_desc;
 	struct block_group_info *bgs;
+	struct xattr_list_element *xattrs;
 	u32 first_data_block;
 	u64 len_blocks;
 	u32 inode_table_blocks;
@@ -143,6 +116,7 @@ struct fs_aux_info {
 
 extern struct fs_info info;
 extern struct fs_aux_info aux_info;
+extern struct sparse_file *ext4_sparse_file;
 
 extern jmp_buf setjmp_env;
 
@@ -156,7 +130,11 @@ static inline int log_2(int j)
 	return i - 1;
 }
 
+int bitmap_get_bit(u8 *bitmap, u32 bit);
+void bitmap_clear_bit(u8 *bitmap, u32 bit);
 int ext4_bg_has_super_block(int bg);
+void read_sb(int fd, struct ext4_super_block *sb);
+void write_sb(int fd, unsigned long long offset, struct ext4_super_block *sb);
 void write_ext4_image(int fd, int gz, int sparse, int crc);
 void ext4_create_fs_aux_info(void);
 void ext4_free_fs_aux_info(void);
@@ -165,20 +143,25 @@ void ext4_create_resize_inode(void);
 void ext4_create_journal_inode(void);
 void ext4_update_free(void);
 void ext4_queue_sb(void);
+u64 get_block_device_size(int fd);
+int is_block_device_fd(int fd);
 u64 get_file_size(int fd);
 u64 parse_num(const char *arg);
-void ext4_parse_sb(struct ext4_super_block *sb);
+void ext4_parse_sb_info(struct ext4_super_block *sb);
 u16 ext4_crc16(u16 crc_in, const void *buf, int size);
 
 typedef void (*fs_config_func_t)(const char *path, int dir, unsigned *uid, unsigned *gid,
-        unsigned *mode);
+		unsigned *mode, uint64_t *capabilities);
 
 struct selabel_handle;
 
 int make_ext4fs_internal(int fd, const char *directory,
-                         const char *mountpoint, fs_config_func_t fs_config_func, int gzip,
-                         int sparse, int crc, int wipe,
-                         struct selabel_handle *sehnd, int verbose);
+						 const char *mountpoint, fs_config_func_t fs_config_func, int gzip,
+						 int sparse, int crc, int wipe,
+						 struct selabel_handle *sehnd, int verbose, time_t fixed_time,
+						 FILE* block_list_file);
+
+int read_ext(int fd, int verbose);
 
 #ifdef __cplusplus
 }

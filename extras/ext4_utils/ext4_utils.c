@@ -23,6 +23,7 @@
 #include <sparse/sparse.h>
 
 #include <fcntl.h>
+#include <inttypes.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stddef.h>
@@ -41,12 +42,10 @@
 #include <sys/disk.h>
 #endif
 
-#include "ext4.h"
-#include "jbd2.h"
-
 int force = 0;
 struct fs_info info;
 struct fs_aux_info aux_info;
+struct sparse_file *ext4_sparse_file;
 
 jmp_buf setjmp_env;
 
@@ -60,6 +59,21 @@ static int is_power_of(int a, int b)
 	}
 
 	return (a == b) ? 1 : 0;
+}
+
+int bitmap_get_bit(u8 *bitmap, u32 bit)
+{
+	if (bitmap[bit / 8] & (1 << (bit % 8)))
+		return 1;
+
+	return 0;
+}
+
+void bitmap_clear_bit(u8 *bitmap, u32 bit)
+{
+	bitmap[bit / 8] &= ~(1 << (bit % 8));
+
+	return;
 }
 
 /* Returns 1 if the bg contains a backup superblock.  On filesystems with
@@ -81,10 +95,42 @@ int ext4_bg_has_super_block(int bg)
 	return 0;
 }
 
+/* Function to read the primary superblock */
+void read_sb(int fd, struct ext4_super_block *sb)
+{
+	off64_t ret;
+
+	ret = lseek64(fd, 1024, SEEK_SET);
+	if (ret < 0)
+		critical_error_errno("failed to seek to superblock");
+
+	ret = read(fd, sb, sizeof(*sb));
+	if (ret < 0)
+		critical_error_errno("failed to read superblock");
+	if (ret != sizeof(*sb))
+		critical_error("failed to read all of superblock");
+}
+
+/* Function to write a primary or backup superblock at a given offset */
+void write_sb(int fd, unsigned long long offset, struct ext4_super_block *sb)
+{
+	off64_t ret;
+
+	ret = lseek64(fd, offset, SEEK_SET);
+	if (ret < 0)
+		critical_error_errno("failed to seek to superblock");
+
+	ret = write(fd, sb, sizeof(*sb));
+	if (ret < 0)
+		critical_error_errno("failed to write superblock");
+	if (ret != sizeof(*sb))
+		critical_error("failed to write all of superblock");
+}
+
 /* Write the filesystem image to a file */
 void write_ext4_image(int fd, int gz, int sparse, int crc)
 {
-	sparse_file_write(info.sparse_file, fd, gz, sparse, crc);
+	sparse_file_write(ext4_sparse_file, fd, gz, sparse, crc);
 }
 
 /* Compute the rest of the parameters of the filesystem from the basic info */
@@ -126,6 +172,7 @@ void ext4_create_fs_aux_info()
 	aux_info.bg_desc = calloc(info.block_size, aux_info.bg_desc_blocks);
 	if (!aux_info.bg_desc)
 		critical_error_errno("calloc");
+	aux_info.xattrs = NULL;
 }
 
 void ext4_free_fs_aux_info()
@@ -209,7 +256,7 @@ void ext4_fill_in_sb()
 		EXT4_GOOD_OLD_INODE_SIZE;
 	sb->s_want_extra_isize = sizeof(struct ext4_inode) -
 		EXT4_GOOD_OLD_INODE_SIZE;
-	sb->s_flags = 0;
+	sb->s_flags = 2;
 	sb->s_raid_stride = 0;
 	sb->s_mmp_interval = 0;
 	sb->s_mmp_block = 0;
@@ -227,10 +274,10 @@ void ext4_fill_in_sb()
 				memcpy(aux_info.backup_sb[i], sb, info.block_size);
 				/* Update the block group nr of this backup superblock */
 				aux_info.backup_sb[i]->s_block_group_nr = i;
-				sparse_file_add_data(info.sparse_file, aux_info.backup_sb[i],
+				sparse_file_add_data(ext4_sparse_file, aux_info.backup_sb[i],
 						info.block_size, group_start_block);
 			}
-			sparse_file_add_data(info.sparse_file, aux_info.bg_desc,
+			sparse_file_add_data(ext4_sparse_file, aux_info.bg_desc,
 				aux_info.bg_desc_blocks * info.block_size,
 				group_start_block + 1);
 			header_size = 1 + aux_info.bg_desc_blocks + info.bg_desc_reserve_blocks;
@@ -256,13 +303,13 @@ void ext4_queue_sb(void)
 	if (info.block_size > 1024) {
 		u8 *buf = calloc(info.block_size, 1);
 		memcpy(buf + 1024, (u8*)aux_info.sb, 1024);
-		sparse_file_add_data(info.sparse_file, buf, info.block_size, 0);
+		sparse_file_add_data(ext4_sparse_file, buf, info.block_size, 0);
 	} else {
-		sparse_file_add_data(info.sparse_file, aux_info.sb, 1024, 1);
+		sparse_file_add_data(ext4_sparse_file, aux_info.sb, 1024, 1);
 	}
 }
 
-void ext4_parse_sb(struct ext4_super_block *sb)
+void ext4_parse_sb_info(struct ext4_super_block *sb)
 {
 	if (sb->s_magic != EXT4_SUPER_MAGIC)
 		error("superblock magic incorrect");
@@ -270,20 +317,7 @@ void ext4_parse_sb(struct ext4_super_block *sb)
 	if ((sb->s_state & EXT4_VALID_FS) != EXT4_VALID_FS)
 		error("filesystem state not valid");
 
-	info.block_size = 1024 << sb->s_log_block_size;
-	info.blocks_per_group = sb->s_blocks_per_group;
-	info.inodes_per_group = sb->s_inodes_per_group;
-	info.inode_size = sb->s_inode_size;
-	info.inodes = sb->s_inodes_count;
-	info.feat_ro_compat = sb->s_feature_ro_compat;
-	info.feat_compat = sb->s_feature_compat;
-	info.feat_incompat = sb->s_feature_incompat;
-	info.bg_desc_reserve_blocks = sb->s_reserved_gdt_blocks;
-	info.label = sb->s_volume_name;
-
-	aux_info.len_blocks = ((u64)sb->s_blocks_count_hi << 32) +
-			sb->s_blocks_count_lo;
-	info.len = (u64)info.block_size * aux_info.len_blocks;
+	ext4_parse_sb(sb, &info);
 
 	ext4_create_fs_aux_info();
 
@@ -387,7 +421,7 @@ void ext4_update_free()
 	}
 }
 
-static u64 get_block_device_size(int fd)
+u64 get_block_device_size(int fd)
 {
 	u64 size = 0;
 	int ret;
@@ -405,6 +439,20 @@ static u64 get_block_device_size(int fd)
 		return 0;
 
 	return size;
+}
+
+int is_block_device_fd(int fd)
+{
+#ifdef USE_MINGW
+	return 0;
+#else
+	struct stat st;
+	int ret = fstat(fd, &st);
+	if (ret < 0)
+		return 0;
+
+	return S_ISBLK(st.st_mode);
+#endif
 }
 
 u64 get_file_size(int fd)
@@ -449,3 +497,48 @@ u64 parse_num(const char *arg)
 
 	return num;
 }
+
+int read_ext(int fd, int verbose)
+{
+	off64_t ret;
+	struct ext4_super_block sb;
+
+	read_sb(fd, &sb);
+
+	ext4_parse_sb_info(&sb);
+
+	ret = lseek64(fd, info.len, SEEK_SET);
+	if (ret < 0)
+		critical_error_errno("failed to seek to end of input image");
+
+	ret = lseek64(fd, info.block_size * (aux_info.first_data_block + 1), SEEK_SET);
+	if (ret < 0)
+		critical_error_errno("failed to seek to block group descriptors");
+
+	ret = read(fd, aux_info.bg_desc, info.block_size * aux_info.bg_desc_blocks);
+	if (ret < 0)
+		critical_error_errno("failed to read block group descriptors");
+	if (ret != (int)info.block_size * (int)aux_info.bg_desc_blocks)
+		critical_error("failed to read all of block group descriptors");
+
+	if (verbose) {
+		printf("Found filesystem with parameters:\n");
+		printf("    Size: %"PRIu64"\n", info.len);
+		printf("    Block size: %d\n", info.block_size);
+		printf("    Blocks per group: %d\n", info.blocks_per_group);
+		printf("    Inodes per group: %d\n", info.inodes_per_group);
+		printf("    Inode size: %d\n", info.inode_size);
+		printf("    Label: %s\n", info.label);
+		printf("    Blocks: %"PRIu64"\n", aux_info.len_blocks);
+		printf("    Block groups: %d\n", aux_info.groups);
+		printf("    Reserved block group size: %d\n", info.bg_desc_reserve_blocks);
+		printf("    Used %d/%d inodes and %d/%d blocks\n",
+			aux_info.sb->s_inodes_count - aux_info.sb->s_free_inodes_count,
+			aux_info.sb->s_inodes_count,
+			aux_info.sb->s_blocks_count_lo - aux_info.sb->s_free_blocks_count_lo,
+			aux_info.sb->s_blocks_count_lo);
+	}
+
+	return 0;
+}
+

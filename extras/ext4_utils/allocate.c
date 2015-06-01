@@ -16,24 +16,11 @@
 
 #include "ext4_utils.h"
 #include "allocate.h"
-#include "ext4.h"
 
 #include <sparse/sparse.h>
 
 #include <stdio.h>
 #include <stdlib.h>
-
-struct region_list {
-	struct region *first;
-	struct region *last;
-	struct region *iter;
-	u32 partial_iter;
-};
-
-struct block_allocation {
-	struct region_list list;
-	struct region_list oob_list;
-};
 
 struct region {
 	u32 block;
@@ -60,6 +47,12 @@ struct block_group_info {
 	u16 used_dirs;
 };
 
+struct xattr_list_element {
+	struct ext4_inode *inode;
+	struct ext4_xattr_header *header;
+	struct xattr_list_element *next;
+};
+
 struct block_allocation *create_allocation()
 {
 	struct block_allocation *alloc = malloc(sizeof(struct block_allocation));
@@ -71,7 +64,28 @@ struct block_allocation *create_allocation()
 	alloc->list.partial_iter = 0;
 	alloc->oob_list.iter = NULL;
 	alloc->oob_list.partial_iter = 0;
+	alloc->filename = NULL;
+	alloc->next = NULL;
 	return alloc;
+}
+
+static struct ext4_xattr_header *xattr_list_find(struct ext4_inode *inode)
+{
+	struct xattr_list_element *element;
+	for (element = aux_info.xattrs; element != NULL; element = element->next) {
+		if (element->inode == inode)
+			return element->header;
+	}
+	return NULL;
+}
+
+static void xattr_list_insert(struct ext4_inode *inode, struct ext4_xattr_header *header)
+{
+	struct xattr_list_element *element = malloc(sizeof(struct xattr_list_element));
+	element->inode = inode;
+	element->header = header;
+	element->next = aux_info.xattrs;
+	aux_info.xattrs = element;
 }
 
 static void region_list_remove(struct region_list *list, struct region *reg)
@@ -113,9 +127,7 @@ static void dump_starting_from(struct region *reg)
 {
 	for (; reg; reg = reg->next) {
 		printf("%p: Blocks %d-%d (%d)\n", reg,
-				reg->bg * info.blocks_per_group + reg->block,
-				reg->bg * info.blocks_per_group + reg->block + reg->len - 1,
-				reg->len);
+			   reg->block, reg->block + reg->len - 1, reg->len)
 	}
 }
 
@@ -128,6 +140,19 @@ static void dump_region_lists(struct block_allocation *alloc) {
 	dump_starting_from(alloc->oob_list.first);
 }
 #endif
+
+void print_blocks(FILE* f, struct block_allocation *alloc)
+{
+	struct region *reg;
+	for (reg = alloc->list.first; reg; reg = reg->next) {
+		if (reg->len == 1) {
+			fprintf(f, " %d", reg->block);
+		} else {
+			fprintf(f, " %d-%d", reg->block, reg->block + reg->len - 1);
+		}
+	}
+	fputc('\n', f);
+}
 
 void append_region(struct block_allocation *alloc,
 		u32 block, u32 len, int bg_num)
@@ -156,7 +181,7 @@ static void allocate_bg_inode_table(struct block_group_info *bg)
 	if (bg->inode_table == NULL)
 		critical_error_errno("calloc");
 
-	sparse_file_add_data(info.sparse_file, bg->inode_table,
+	sparse_file_add_data(ext4_sparse_file, bg->inode_table,
 			aux_info.inode_table_blocks	* info.block_size, block);
 
 	bg->flags &= ~EXT4_BG_INODE_UNINIT;
@@ -274,7 +299,7 @@ static void init_bg(struct block_group_info *bg, unsigned int i)
 	u32 block = bg->first_block;
 	if (bg->has_superblock)
 		block += 1 + aux_info.bg_desc_blocks +  info.bg_desc_reserve_blocks;
-	sparse_file_add_data(info.sparse_file, bg->bitmaps, 2 * info.block_size,
+	sparse_file_add_data(ext4_sparse_file, bg->bitmaps, 2 * info.block_size,
 			block);
 
 	bg->data_blocks_used = 0;
@@ -287,9 +312,10 @@ static void init_bg(struct block_group_info *bg, unsigned int i)
 	if (reserve_blocks(bg, bg->first_free_block, bg->header_blocks) < 0)
 		error("failed to reserve %u blocks in block group %u\n", bg->header_blocks, i);
 
-	u32 overrun = bg->first_block + info.blocks_per_group - aux_info.len_blocks;
-	if (overrun > 0)
+	if (bg->first_block + info.blocks_per_group > aux_info.len_blocks) {
+		u32 overrun = bg->first_block + info.blocks_per_group - aux_info.len_blocks;
 		reserve_blocks(bg, info.blocks_per_group - overrun, overrun);
+	}
 }
 
 void block_allocator_init()
@@ -332,28 +358,6 @@ static u32 ext4_allocate_blocks_from_block_group(u32 len, int bg_num)
 	return bg->first_block + block;
 }
 
-static struct region *ext4_allocate_contiguous_blocks(u32 len)
-{
-	unsigned int i;
-	struct region *reg;
-
-	for (i = 0; i < aux_info.groups; i++) {
-		u32 block = ext4_allocate_blocks_from_block_group(len, i);
-
-		if (block != EXT4_ALLOCATE_FAILED) {
-			reg = malloc(sizeof(struct region));
-			reg->block = block;
-			reg->len = len;
-			reg->next = NULL;
-			reg->prev = NULL;
-			reg->bg = i;
-			return reg;
-		}
-	}
-
-	return NULL;
-}
-
 /* Allocate a single block and return its block number */
 u32 allocate_block()
 {
@@ -368,52 +372,52 @@ u32 allocate_block()
 	return EXT4_ALLOCATE_FAILED;
 }
 
-static struct region *ext4_allocate_partial(u32 len)
+static struct region *ext4_allocate_best_fit_partial(u32 len)
 {
 	unsigned int i;
-	struct region *reg;
+	unsigned int found_bg = 0;
+	u32 found_bg_len = 0;
 
 	for (i = 0; i < aux_info.groups; i++) {
-		if (aux_info.bgs[i].data_blocks_used == 0) {
-			u32 bg_len = aux_info.bgs[i].free_blocks;
-			u32 block;
+		u32 bg_len = aux_info.bgs[i].free_blocks;
 
-			if (len <= bg_len) {
-				/* If the requested length would fit in a block group,
-				 use the regular allocator to try to fit it in a partially
-				 used block group */
-				bg_len = len;
-				reg = ext4_allocate_contiguous_blocks(len);
-			} else {
-				block = ext4_allocate_blocks_from_block_group(bg_len, i);
-
-				if (block == EXT4_ALLOCATE_FAILED) {
-					error("failed to allocate %d blocks in block group %d", bg_len, i);
-					return NULL;
-				}
-
-				reg = malloc(sizeof(struct region));
-				reg->block = block;
-				reg->len = bg_len;
-				reg->next = NULL;
-				reg->prev = NULL;
-				reg->bg = i;
-			}
-
-			return reg;
+		if ((len <= bg_len && (found_bg_len == 0 || bg_len < found_bg_len)) ||
+		    (len > found_bg_len && bg_len > found_bg_len)) {
+			found_bg = i;
+			found_bg_len = bg_len;
 		}
 	}
+
+	if (found_bg_len) {
+		u32 allocate_len = min(len, found_bg_len);
+		struct region *reg;
+		u32 block = ext4_allocate_blocks_from_block_group(allocate_len, found_bg);
+		if (block == EXT4_ALLOCATE_FAILED) {
+			error("failed to allocate %d blocks in block group %d", allocate_len, found_bg);
+			return NULL;
+		}
+		reg = malloc(sizeof(struct region));
+		reg->block = block;
+		reg->len = allocate_len;
+		reg->next = NULL;
+		reg->prev = NULL;
+		reg->bg = found_bg;
+		return reg;
+	} else {
+		error("failed to allocate %u blocks, out of space?", len);
+	}
+
 	return NULL;
 }
 
-static struct region *ext4_allocate_multiple_contiguous_blocks(u32 len)
+static struct region *ext4_allocate_best_fit(u32 len)
 {
 	struct region *first_reg = NULL;
 	struct region *prev_reg = NULL;
 	struct region *reg;
 
 	while (len > 0) {
-		reg = ext4_allocate_partial(len);
+		reg = ext4_allocate_best_fit_partial(len);
 		if (reg == NULL)
 			return NULL;
 
@@ -432,27 +436,16 @@ static struct region *ext4_allocate_multiple_contiguous_blocks(u32 len)
 	return first_reg;
 }
 
-struct region *do_allocate(u32 len)
-{
-	struct region *reg = ext4_allocate_contiguous_blocks(len);
-
-	if (reg == NULL)
-		reg = ext4_allocate_multiple_contiguous_blocks(len);
-
-	return reg;
-}
-
 /* Allocate len blocks.  The blocks may be spread across multiple block groups,
    and are returned in a linked list of the blocks in each block group.  The
    allocation algorithm is:
-      1.  Try to allocate the entire block len in each block group
-      2.  If the request doesn't fit in any block group, allocate as many
-          blocks as possible into each block group that is completely empty
-      3.  Put the last set of blocks in the first block group they fit in
+      1.  If the remaining allocation is larger than any available contiguous region,
+          allocate the largest contiguous region and loop
+      2.  Otherwise, allocate the smallest contiguous region that it fits in
 */
 struct block_allocation *allocate_blocks(u32 len)
 {
-	struct region *reg = do_allocate(len);
+	struct region *reg = ext4_allocate_best_fit(len);
 
 	if (reg == NULL)
 		return NULL;
@@ -648,7 +641,7 @@ int advance_oob_blocks(struct block_allocation *alloc, int blocks)
 
 int append_oob_allocation(struct block_allocation *alloc, u32 len)
 {
-	struct region *reg = do_allocate(len);
+	struct region *reg = ext4_allocate_best_fit(len);
 
 	if (reg == NULL) {
 		error("failed to allocate %d blocks", len);
@@ -671,6 +664,35 @@ struct ext4_inode *get_inode(u32 inode)
 	allocate_bg_inode_table(&aux_info.bgs[bg]);
 	return (struct ext4_inode *)(aux_info.bgs[bg].inode_table + inode *
 		info.inode_size);
+}
+
+struct ext4_xattr_header *get_xattr_block_for_inode(struct ext4_inode *inode)
+{
+	struct ext4_xattr_header *block = xattr_list_find(inode);
+	if (block != NULL)
+		return block;
+
+	u32 block_num = allocate_block();
+	block = calloc(info.block_size, 1);
+	if (block == NULL) {
+		error("get_xattr: failed to allocate %d", info.block_size);
+		return NULL;
+	}
+
+	block->h_magic = cpu_to_le32(EXT4_XATTR_MAGIC);
+	block->h_refcount = cpu_to_le32(1);
+	block->h_blocks = cpu_to_le32(1);
+	inode->i_blocks_lo = cpu_to_le32(le32_to_cpu(inode->i_blocks_lo) + (info.block_size / 512));
+	inode->i_file_acl_lo = cpu_to_le32(block_num);
+
+	int result = sparse_file_add_data(ext4_sparse_file, block, info.block_size, block_num);
+	if (result != 0) {
+		error("get_xattr: sparse_file_add_data failure %d", result);
+		free(block);
+		return NULL;
+	}
+	xattr_list_insert(inode, block);
+	return block;
 }
 
 /* Mark the first len inodes in a block group as used */

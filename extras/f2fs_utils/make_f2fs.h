@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef _EXTENT_H_
-#define _EXTENT_H_
+#ifndef _MAKE_F2FS_H_
+#define _MAKE_F2FS_H_
 
-#include "allocate.h"
-#include "ext4_utils.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void inode_allocate_extents(struct ext4_inode *inode, u64 len);
-struct block_allocation* inode_allocate_file_extents(
-	struct ext4_inode *inode, u64 len, const char *filename);
-u8 *inode_allocate_data_extents(struct ext4_inode *inode, u64 len,
-	u64 backing_len);
-void free_extent_blocks();
+struct selabel_handle;
+
+int make_f2fs_sparse_fd(int fd, long long len,
+              const char *mountpoint, struct selabel_handle *sehnd);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

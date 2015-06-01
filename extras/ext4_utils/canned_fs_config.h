@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2014 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef _EXTENT_H_
-#define _EXTENT_H_
+#ifndef _CANNED_FS_CONFIG_H
+#define _CANNED_FS_CONFIG_H
 
-#include "allocate.h"
-#include "ext4_utils.h"
+#include <inttypes.h>
 
-void inode_allocate_extents(struct ext4_inode *inode, u64 len);
-struct block_allocation* inode_allocate_file_extents(
-	struct ext4_inode *inode, u64 len, const char *filename);
-u8 *inode_allocate_data_extents(struct ext4_inode *inode, u64 len,
-	u64 backing_len);
-void free_extent_blocks();
+int load_canned_fs_config(const char* fn);
+void canned_fs_config(const char* path, int dir,
+                      unsigned* uid, unsigned* gid, unsigned* mode, uint64_t* capabilities);
 
 #endif
