@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -173,11 +174,12 @@ static void *load_fd(int fd, unsigned *_sz)
         goto oops;
     }
 
-    data = (char*) malloc(sz);
+    //data = (char*) malloc(sz);
+    data = mmap(NULL, sz, PROT_READ, MAP_SHARED, fd, 0);
     if(data == 0) goto oops;
 
-    if(read(fd, data, sz) != sz) goto oops;
-    close(fd);
+    //if(read(fd, data, sz) != sz) goto oops;
+    //close(fd);
 
     if(_sz) *_sz = sz;
     return data;
