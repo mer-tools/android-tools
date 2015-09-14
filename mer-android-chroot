@@ -176,9 +176,11 @@ prepare_mountpoints() {
 prepare_user() {
     # remove mer user if present
     sed -i -e "/^mer:/d" ${uburoot}/etc/passwd
-    # getent is probably best for user data
+    # Remove ${user} if present
     sed -i -e "/^${user}:/d" ${uburoot}/etc/passwd
-    getent passwd $user >> ${uburoot}/etc/passwd
+    # Use getent to get ${user}'s record from /etc/passwd
+    # Use awk to make sure the shell is set to /bin/bash
+    getent passwd $user | awk 'BEGIN { FS = ":" } { OFS = ":"} { $7="/bin/bash"; print }'>> ${uburoot}/etc/passwd
     group=$(getent passwd $user | cut -f4 -d:)
     sed -i -e "/^[^:]*:[^:]*:${group}:/d" ${uburoot}/etc/group
     getent group $group >> ${uburoot}/etc/group
