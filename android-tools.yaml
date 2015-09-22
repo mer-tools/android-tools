@@ -11,7 +11,7 @@ Description: |
 
   Based on Debian android-tools package
 Version: 4.2.2_git20130218
-Release: 13
+Release: 14
 Group: Tools
 License: Apache 2.0
 Sources:
@@ -51,6 +51,7 @@ Patches:
   - 0014-PATCH-Add-usb-vendor-info.patch
   - 0015-PATCH-Use-mmap-for-fastboot-data.patch
   - 0016-PATCH-Ignore-selinux-android-header.patch
+  - 0017-Fixed-the-script-for-non-Bash-users.patch
 SetupOptions: -q -n src
 SubPackages:
   - Name: sudo-for-abuild

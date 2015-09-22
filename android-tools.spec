@@ -10,7 +10,7 @@ Name:       android-tools
 
 Summary:    Minimal set of android tools
 Version:    4.2.2_git20130218
-Release:    13
+Release:    14
 Group:      Tools
 License:    Apache 2.0
 Source0:    android-tools-4.2.2_git20130218.tar.gz
@@ -34,6 +34,7 @@ Patch12:     0013-Update-to-new-extras-ba2a236.patch
 Patch13:     0014-PATCH-Add-usb-vendor-info.patch
 Patch14:     0015-PATCH-Use-mmap-for-fastboot-data.patch
 Patch15:     0016-PATCH-Ignore-selinux-android-header.patch
+Patch16:     0017-Fixed-the-script-for-non-Bash-users.patch
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  libselinux-devel
 BuildRequires:  python
@@ -95,6 +96,8 @@ Allow abuild user to execute sudo in an OBS build root.
 %patch14 -p1
 # 0016-PATCH-Ignore-selinux-android-header.patch
 %patch15 -p1
+# 0017-Fixed-the-script-for-non-Bash-users.patch
+%patch16 -p1
 # >> setup
 # << setup
 
