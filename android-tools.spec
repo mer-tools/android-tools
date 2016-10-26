@@ -10,7 +10,7 @@ Name:       android-tools
 
 Summary:    Minimal set of android tools
 Version:    4.2.2_git20130218
-Release:    14
+Release:    15
 Group:      Tools
 License:    Apache 2.0
 Source0:    android-tools-4.2.2_git20130218.tar.gz
@@ -35,6 +35,8 @@ Patch13:     0014-PATCH-Add-usb-vendor-info.patch
 Patch14:     0015-PATCH-Use-mmap-for-fastboot-data.patch
 Patch15:     0016-PATCH-Ignore-selinux-android-header.patch
 Patch16:     0017-Fixed-the-script-for-non-Bash-users.patch
+Patch17:     0018-ubu-chroot-Let-environment-know-we-are-within-the-ub.patch
+Patch18:     0019-ubu-chroot-Fix-crash-with-util-linux-2.27.-Fixes-JB-.patch
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  libselinux-devel
 BuildRequires:  python
@@ -98,6 +100,11 @@ Allow abuild user to execute sudo in an OBS build root.
 %patch15 -p1
 # 0017-Fixed-the-script-for-non-Bash-users.patch
 %patch16 -p1
+# 0018-ubu-chroot-Let-environment-know-we-are-within-the-ub.patch
+%patch17 -p1
+# 0019-ubu-chroot-Fix-crash-with-util-linux-2.27.-Fixes-JB-.patch
+%patch18 -p1
+
 # >> setup
 # << setup
 
