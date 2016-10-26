@@ -70,7 +70,11 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 if cmp -s /proc/$PPID/mountinfo /proc/self/mountinfo; then
-    exec unshare -m -- "$0" "$@"
+    # Propagation switch was introduced by util-linux-2.27, let's check here:
+    unshare --help | fgrep -q -- --propagation && UNSHARE_EXTRA_OPT="--propagation unchanged"
+    # Leave the propagation unchanged when launched within SDK, otherwise an
+    # attempt to alter it (even default behaviour) results in "Invalid argument"
+    exec unshare $UNSHARE_EXTRA_OPT -m -- "$0" "$@"
     echo "$0 must be run in private namespace and unshare failed; exiting"
     exit 1
 fi
@@ -265,10 +269,10 @@ do_it_all() {
 	    inform "Entering chroot as $user"
 	    if grep squeeze ${uburoot}/etc/debian_version > /dev/null; then
 		# For older 10.04
-		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup -i";
+		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user "export MERSDKUBU=1; if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup -i";
 	    elif grep "wheezy\|jessie" ${uburoot}/etc/debian_version > /dev/null; then
 		# This is for ubuntu 12.04 (arg quoting for sudo is different)
-		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user exec bash -i -c "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup"
+		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user exec bash -i -c "export MERSDKUBU=1; if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup"
 	    else
 		echo Unknown ubuntu version
 		exit 1
@@ -289,7 +293,7 @@ EOF
 		usage
 		retval=1
 	    else
-		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user exec bash -i -c "if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup -c '$*'"
+		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user exec bash -i -c "export MERSDKUBU=1; if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup -c '$*'"
 		retval=$?
 	    fi
 	    ;;
