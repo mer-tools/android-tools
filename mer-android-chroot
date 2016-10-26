@@ -70,7 +70,11 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 if cmp -s /proc/$PPID/mountinfo /proc/self/mountinfo; then
-    exec unshare -m -- "$0" "$@"
+    # Propagation switch was introduced by util-linux-2.27, let's check here:
+    unshare --help | fgrep -q -- --propagation && UNSHARE_EXTRA_OPT="--propagation unchanged"
+    # Leave the propagation unchanged when launched within SDK, otherwise an
+    # attempt to alter it (even default behaviour) results in "Invalid argument"
+    exec unshare $UNSHARE_EXTRA_OPT -m -- "$0" "$@"
     echo "$0 must be run in private namespace and unshare failed; exiting"
     exit 1
 fi
