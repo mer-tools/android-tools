@@ -1,3 +1,7 @@
+* Thu Oct 27 2016 Igor Zhbanov <igor.zhbanov@jolla.com> - 4.2.2_git20130218-15
+- [ubu-chroot] Fix crash with >=util-linux-2.27. Fixes JB#36583
+- [ubu-chroot] Let environment know we are within the ubu-chroot
+
 * Tue Sep 22 2015 David Greaves <david@dgreaves.com> - 4.2.2_git20130218-14
 - Fixed the script for non-Bash users.
 
