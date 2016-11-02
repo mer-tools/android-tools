@@ -155,12 +155,40 @@ umask 022
 
 ################################################################
 # Mount
+
+# In order to deal with varying status of adoption of changes to FHS among
+# distributions a list of alternate paths is considered for binding.
 mount_bind() {
-    if [[ ! -d ${uburoot}$1 ]]; then
-	rm -f ${uburoot}$1
-	mkdir -p ${uburoot}$1
+    maybe_symlinks="$*"
+    src=""
+    dsts=""
+
+    for dir in $maybe_symlinks; do
+        if [[ -d $dir ]]; then
+            src="$dir"
+            break
+        fi
+    done
+
+    if [[ -z "$src" ]]; then
+        echo "mount_bind $*: None of these exists on your host - please report this bug"
+        return
     fi
-    mount --bind $1 ${uburoot}$1
+
+    for dir in $maybe_symlinks; do
+        if [[ -e ${uburoot}$dir && ! -L ${uburoot}$dir ]]; then
+            dsts="$dsts $dir"
+        fi
+    done
+
+    if [[ -z "$dsts" ]]; then
+        echo "mount_bind $*: No non-symlink target in SDK root - please report this bug"
+        return
+    fi
+
+    for dst in $dsts; do
+        mount --bind $src ${uburoot}$dst
+    done
 }
 prepare_mountpoints() {
     # Make parent mountpoint not shared with parent namespace
@@ -172,7 +200,7 @@ prepare_mountpoints() {
     mount_bind /sys
     mount_bind /dev
     mount_bind /dev/pts
-    mount_bind /dev/shm
+    mount_bind /dev/shm /run/shm
     mount_bind /var/lib/dbus
     mount_bind /var/run/dbus
 
@@ -190,7 +218,7 @@ umount_spare() {
     # for some reason these seem to escape the unshare -m
     umount ${uburoot}/proc/sys/fs/binfmt_misc || :
     umount ${uburoot}/dev/pts || :
-    umount ${uburoot}/dev/shm || :
+    umount ${uburoot}/dev/shm ${uburoot}/run/shm || :
     umount ${uburoot}/var/run/dbus || :
 }
 
