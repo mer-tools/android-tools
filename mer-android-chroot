@@ -272,7 +272,7 @@ do_it_all() {
 		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user "export MERSDKUBU=1; if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup -i";
 	    elif grep "wheezy\|jessie" ${uburoot}/etc/debian_version > /dev/null; then
 		# This is for ubuntu 12.04 (arg quoting for sudo is different)
-		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user exec bash -i -c "export MERSDKUBU=1; if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup"
+		setarch x86_64 chroot ${uburoot} /usr/bin/sudo -i -u $user exec /bin/bash -i -c "export MERSDKUBU=1; if [ -d \"$cwd\" ]; then cd \"$cwd\"; fi; exec /bin/bash --init-file /parentroot/usr/share/ubu-chroot/mer-ubusdk-bash-setup"
 	    else
 		echo Unknown ubuntu version
 		exit 1
