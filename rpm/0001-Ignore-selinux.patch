@@ -1,0 +1,55 @@
+From ea53d54fba30364ec78eef90fb583030a57f0806 Mon Sep 17 00:00:00 2001
+From: Matti Kosola <matti.kosola@jolla.com>
+Date: Thu, 3 May 2018 07:54:11 +0000
+Subject: [PATCH] Ignore selinux
+
+Signed-off-by: Matti Kosola <matti.kosola@jolla.com>
+---
+ ext4_utils/make_ext4fs.c      | 8 +++++---
+ ext4_utils/make_ext4fs_main.c | 6 +++---
+ 2 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/ext4_utils/make_ext4fs.c b/ext4_utils/make_ext4fs.c
+index 2f89ae8..20c6cc7 100644
+--- a/ext4_utils/make_ext4fs.c
++++ b/ext4_utils/make_ext4fs.c
+@@ -60,14 +60,16 @@
+ 
+ #else
+ 
+-#include <selinux/selinux.h>
+-#include <selinux/label.h>
+-#include <selinux/android.h>
++//#include <selinux/selinux.h>
++//#include <selinux/label.h>
++//#include <selinux/android.h>
+ 
+ #define O_BINARY 0
+ 
+ #endif
+ 
++#define USE_MINGW
++
+ /* TODO: Not implemented:
+    Allocating blocks in the same block group as the file inode
+    Hash or binary tree directories
+diff --git a/ext4_utils/make_ext4fs_main.c b/ext4_utils/make_ext4fs_main.c
+index a6c5f61..4a8a235 100644
+--- a/ext4_utils/make_ext4fs_main.c
++++ b/ext4_utils/make_ext4fs_main.c
+@@ -30,9 +30,9 @@
+ #endif
+ 
+ #ifndef USE_MINGW
+-#include <selinux/selinux.h>
+-#include <selinux/label.h>
+-#include <selinux/android.h>
++//#include <selinux/selinux.h>
++//#include <selinux/label.h>
++//#include <selinux/android.h>
+ #else
+ struct selabel_handle;
+ #endif
+-- 
+2.0.0
+

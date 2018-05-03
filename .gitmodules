@@ -1,0 +1,6 @@
+[submodule "core"]
+	path = core
+	url = https://android.googlesource.com/platform/system/core
+[submodule "extras"]
+	path = extras
+	url = https://android.googlesource.com/platform/system/extras
