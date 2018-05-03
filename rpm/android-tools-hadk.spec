@@ -12,6 +12,7 @@ Source3:    mkbootimg.mk
 Patch0:     0001-Ignore-selinux.patch
 Patch1:     0001-Add-vendors.patch
 Patch2:     0001-Use-mmap-for-fastboot-data.patch
+Patch3:     0001-mkbootimg-add-dt-parameter.patch
 
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  python
@@ -40,6 +41,7 @@ Allow abuild user to execute sudo in an OBS build root.
 %patch0 -p1 -d extras
 %patch1 -p1 -d core
 %patch2 -p1 -d core
+%patch3 -p1 -d core
 
 %build
 make -f %{SOURCE1} -C core/adb
